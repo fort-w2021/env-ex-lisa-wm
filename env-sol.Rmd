@@ -24,31 +24,28 @@ d) Schreiben sie eine modifizierte Version `anywhere()` der Funktion `where()` a
 
 anywhere <- function(name, env = parent.frame()) {
   
-  stopifnot(is.character(name), length(name) == 1)
+  checkmate::assert_string(name)
+  checkmate::assert_environment(env)
   
   env <- pryr:::to_env(env)
+
+  list_environments <- list()
   
-  if (identical(env, emptyenv())) stop("Can't find ", name, call. = FALSE)
-  
-  if (exists(name, env, inherits = TRUE)) {
+  while (!identical(env, emptyenv())) {
     
-    parents <- env_parents(env, last = empty_env())
-    
-    is_drin <- logical(length = length(parents))
-    
-    for (i in parents) {
-      if (exists(name, parents$i)) {is_drin <- TRUE}
+    if (exists(name, env, inherits = FALSE)) {
+      list_environments <- append(list_environments, env)
     }
+    env <- parent.env(env)
     
-    list(env)
-    
-    }
+  }
   
-  else anywhere(name, parent.env(env))
+  list_environments
   
 }
 
 anywhere("t", env = e0)
+
 ```
 
 *Hinweis:* Die Funktion `to_env()`, die in `pryr::where()` benutzt wird wird nicht von `pryr` exportiert. Sie können die Funktion trotzdem mittels `pryr:::to_env()` aufrufen.
